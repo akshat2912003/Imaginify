@@ -16,7 +16,6 @@ import { aspectRatioOptions, creditFee, defaultValues, transformationTypes } fro
 import { addImage, updateImage } from "@/lib/actions/image.actions";
 import { updateCredits } from "@/lib/actions/user.actions";
 import { AspectRatioKey, deepMergeObjects } from "@/lib/utils";
-import { IImage } from "@/lib/database/models/image.model";
 import MediaUploader from "./MediaUploader";
 import TransformedImage from "./TransformedImage";
 import { InsufficientCreditsModal } from "./InsufficientCreditsModal";
@@ -28,6 +27,9 @@ export const formSchema = z.object({
   prompt: z.string().optional(),
   publicId: z.string(),
 });
+
+// These types have NO extra input fields — button should enable as soon as image is uploaded
+const NO_FIELD_TYPES = ["restore", "removeBackground"];
 
 const TransformationForm = ({ action, data = null, userId, type, creditBalance, config = null }: TransformationFormProps) => {
   const transformationType = transformationTypes[type];
@@ -49,9 +51,28 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     defaultValues: initialValues,
   });
 
+  // ✅ KEY FIX: For restore & removeBackground, auto-enable button when image is uploaded
+  useEffect(() => {
+    if (image?.publicId && NO_FIELD_TYPES.includes(type)) {
+      setNewTransformation(transformationType.config);
+    }
+  }, [image?.publicId, type]);
+
+  // ✅ For Update action, pre-set the transformation config
+  useEffect(() => {
+    if (data && action === "Update") {
+      setNewTransformation(transformationType.config);
+    }
+  }, []);
+
   const onSelectFieldHandler = (value: string, onChangeField: (value: string) => void) => {
     const imageSize = aspectRatioOptions[value as AspectRatioKey];
-    setImage((prevState: any) => ({ ...prevState, aspectRatio: imageSize.aspectRatio, width: imageSize.width, height: imageSize.height }));
+    setImage((prevState: any) => ({
+      ...prevState,
+      aspectRatio: imageSize.aspectRatio,
+      width: imageSize.width,
+      height: imageSize.height,
+    }));
     setNewTransformation(transformationType.config);
     return onChangeField(value);
   };
@@ -59,7 +80,13 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   const onInputChangeHandler = (fieldName: string, value: string, type: string, onChangeField: (value: string) => void) => {
     clearTimeout((window as any).debounceTimer);
     (window as any).debounceTimer = setTimeout(() => {
-      setNewTransformation((prevState: any) => ({ ...prevState, [type]: { ...prevState?.[type], [fieldName === "prompt" ? "prompt" : "to"]: value } }));
+      setNewTransformation((prevState: any) => ({
+        ...prevState,
+        [type]: {
+          ...prevState?.[type],
+          [fieldName === "prompt" ? "prompt" : "to"]: value,
+        },
+      }));
     }, 400);
     return onChangeField(value);
   };
@@ -90,36 +117,56 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
         prompt: values.prompt,
         color: values.color,
       };
+
       if (action === "Add") {
         try {
           const newImage = await addImage({ image: imageData, userId, path: "/" });
-          if (newImage) { form.reset(); setImage(data); router.push(`/transformations/${newImage._id}`); }
-        } catch (error) { toast({ title: "Error", description: "Failed to save image.", className: "error-toast" }); }
+          if (newImage) {
+            form.reset();
+            setImage(data);
+            router.push(`/transformations/${newImage._id}`);
+          }
+        } catch (error) {
+          toast({ title: "Error", description: "Failed to save image.", className: "error-toast" });
+        }
       }
+
       if (action === "Update") {
         try {
-          const updatedImage = await updateImage({ image: { ...imageData, _id: data?._id || "" }, userId, path: `/transformations/${data?._id}` });
+          const updatedImage = await updateImage({
+            image: { ...imageData, _id: data?._id || "" },
+            userId,
+            path: `/transformations/${data?._id}`,
+          });
           if (updatedImage) router.push(`/transformations/${updatedImage._id}`);
-        } catch (error) { toast({ title: "Error", description: "Failed to update image.", className: "error-toast" }); }
+        } catch (error) {
+          toast({ title: "Error", description: "Failed to update image.", className: "error-toast" });
+        }
       }
     }
     setIsSubmitting(false);
   };
 
+  // ✅ FIXED: Button disabled only if no image OR no transformation set
+  const isApplyDisabled = isTransforming || !image?.publicId || newTransformation === null;
+
   return (
     <Form {...form}>
       {creditBalance < Math.abs(creditFee) && <InsufficientCreditsModal />}
       <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
+
         {/* Title */}
         <FormField control={form.control} name="title" render={({ field }) => (
           <FormItem className="w-full">
             <FormLabel className="text-dark-600 font-semibold">Image Title</FormLabel>
-            <FormControl><Input className="input-field" placeholder="Enter a title..." {...field} /></FormControl>
+            <FormControl>
+              <Input className="input-field" placeholder="Enter a title..." {...field} />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )} />
 
-        {/* Generative Fill aspect ratio */}
+        {/* Generative Fill — Aspect Ratio Selector */}
         {type === "fill" && (
           <FormField control={form.control} name="aspectRatio" render={({ field }) => (
             <FormItem className="w-full">
@@ -143,7 +190,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           )} />
         )}
 
-        {/* Prompt fields for remove/recolor */}
+        {/* Object Remove / Object Recolor — Prompt fields */}
         {(type === "remove" || type === "recolor") && (
           <div className="prompt-field">
             <FormField control={form.control} name="prompt" render={({ field }) => (
@@ -155,7 +202,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
                   <Input
                     value={field.value}
                     className="input-field"
-                    placeholder={type === "remove" ? "e.g. bird, person, car..." : "e.g. shirt, jacket..."}
+                    placeholder={type === "remove" ? "e.g. bird, person, car..." : "e.g. shirt, jacket, bag..."}
                     onChange={(e) => onInputChangeHandler("prompt", e.target.value, type, field.onChange)}
                   />
                 </FormControl>
@@ -182,7 +229,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           </div>
         )}
 
-        {/* Image uploader and transformed image */}
+        {/* Image Uploader + Transformed Preview */}
         <div className="media-uploader-field">
           <FormField control={form.control} name="publicId" render={({ field }) => (
             <FormItem className="flex size-full flex-col">
@@ -214,15 +261,36 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           <Button
             type="button"
             className="submit-button capitalize"
-            disabled={isTransforming || newTransformation === null}
+            disabled={isApplyDisabled}
             onClick={onTransformHandler}
           >
-            {isTransforming ? "Transforming..." : "Apply Transformation"}
+            {isTransforming ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin inline-block">⟳</span>
+                Transforming... Please wait
+              </span>
+            ) : (
+              "Apply Transformation"
+            )}
           </Button>
-          <Button type="submit" className="submit-button capitalize bg-dark-600" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Image"}
+
+          <Button
+            type="submit"
+            className="submit-button capitalize"
+            style={{ background: "#2B3674" }}
+            disabled={isSubmitting || isTransforming}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin inline-block">⟳</span>
+                Saving...
+              </span>
+            ) : (
+              "Save Image"
+            )}
           </Button>
         </div>
+
       </form>
     </Form>
   );
