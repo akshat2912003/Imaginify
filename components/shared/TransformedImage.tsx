@@ -1,6 +1,6 @@
 "use client";
 
-import { CldImage } from "next-cloudinary";
+import { CldImage, getCldImageUrl } from "next-cloudinary";
 import { dataUrl, debounce, download, getImageSize } from "@/lib/utils";
 import { PlaceholderValue } from "next/dist/shared/lib/get-img-props";
 
@@ -9,8 +9,22 @@ const TransformedImage = ({
 }: TransformedImageProps) => {
   const downloadHandler = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
-    download(getCldImageUrl({ width: image?.width, height: image?.height, src: image?.publicId, ...transformationConfig }), title);
+    const downloadUrl = getCldImageUrl({
+      width: displayWidth,
+      height: displayHeight,
+      src: image?.publicId,
+      ...transformationConfig,
+    });
+    download(downloadUrl, title);
   };
+
+  // For smartcrop, use the dimensions from transformationConfig (the selected ratio)
+  const displayWidth = (type === "smartcrop" && transformationConfig?.width)
+    ? transformationConfig.width
+    : getImageSize(type, image, "width");
+  const displayHeight = (type === "smartcrop" && transformationConfig?.height)
+    ? transformationConfig.height
+    : getImageSize(type, image, "height");
 
   return (
     <div className="flex flex-col gap-4">
@@ -26,8 +40,8 @@ const TransformedImage = ({
       {image?.publicId && transformationConfig ? (
         <div className="relative">
           <CldImage
-            width={getImageSize(type, image, "width")}
-            height={getImageSize(type, image, "height")}
+            width={displayWidth}
+            height={displayHeight}
             src={image?.publicId}
             alt={image.title}
             sizes="(max-width: 767px) 100vw, 50vw"
@@ -41,7 +55,7 @@ const TransformedImage = ({
             <div className="transforming-loader">
               <div className="flex flex-col items-center gap-2">
                 <div className="animate-spin text-4xl">⟳</div>
-                <p className="text-white text-sm">Please wait...</p>
+                <p className="text-white text-sm">Transforming... Please wait</p>
               </div>
             </div>
           )}
@@ -56,8 +70,3 @@ const TransformedImage = ({
 };
 
 export default TransformedImage;
-
-// Helper to get CLD image URL
-function getCldImageUrl(options: any) {
-  return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${options.src}`;
-}

@@ -5,10 +5,7 @@ export const navLinks = [
   { label: "Object Remove", route: "/transformations/add/remove", icon: "🗑️" },
   { label: "Object Recolor", route: "/transformations/add/recolor", icon: "🎨" },
   { label: "Background Remove", route: "/transformations/add/removeBackground", icon: "📷" },
-  { label: "Generative Replace", route: "/transformations/add/replace", icon: "🔄" },
   { label: "Smart Crop", route: "/transformations/add/smartcrop", icon: "✂️" },
-  { label: "Text to Image", route: "/ai/text-to-image", icon: "🎨" },
-  { label: "Image Analyzer", route: "/ai/image-analyzer", icon: "🔍" },
   { label: "Profile", route: "/profile", icon: "👤" },
   { label: "Buy Credits", route: "/credits", icon: "💳" },
 ];
@@ -91,13 +88,6 @@ export const transformationTypes = {
     subTitle: "Identify and recolor objects from the image",
     config: { recolor: { prompt: "", to: "", multiple: true } },
     icon: "🎨",
-  },
-  replace: {
-  type: "replace",
-  title: "Generative Replace",
-  subTitle: "Replace any object in your image with AI-generated content",
-  config: { replace: { from: "", to: "" } },
-  icon: "🔄",
   },
   smartcrop: {
     type: "smartcrop",

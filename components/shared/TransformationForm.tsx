@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { aspectRatioOptions, creditFee, defaultValues, transformationTypes, smartCropAspectRatios } from "@/constants";
 import { addImage, updateImage } from "@/lib/actions/image.actions";
 import { updateCredits } from "@/lib/actions/user.actions";
-import { AspectRatioKey, deepMergeObjects } from "@/lib/utils";
+import { AspectRatioKey } from "@/lib/utils";
 import MediaUploader from "./MediaUploader";
 import TransformedImage from "./TransformedImage";
 import { InsufficientCreditsModal } from "./InsufficientCreditsModal";
@@ -38,8 +38,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
   const [transformationConfig, setTransformationConfig] = useState(config);
-  const [replaceFrom, setReplaceFrom] = useState("");
-  const [replaceTo, setReplaceTo] = useState("");
   const [smartCropRatio, setSmartCropRatio] = useState("1:1");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -59,8 +57,12 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     if (image?.publicId && NO_FIELD_TYPES.includes(type)) {
       if (type === "smartcrop") {
         const ratio = smartCropAspectRatios[smartCropRatio as keyof typeof smartCropAspectRatios];
+        // Pass width + height from the selected ratio so Cloudinary actually resizes
         setNewTransformation({
-          smartCrop: true,
+          crop: "thumb",
+          gravity: "auto",
+          width: ratio.width,
+          height: ratio.height,
         });
       } else {
         setNewTransformation(transformationType.config);
@@ -74,15 +76,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
       setNewTransformation(transformationType.config);
     }
   }, []);
-
-  // ✅ For replace type — enable button when both fields are filled
-  useEffect(() => {
-    if (type === "replace" && image?.publicId && replaceFrom && replaceTo) {
-      setNewTransformation({
-        replace: { from: replaceFrom, to: replaceTo },
-      });
-    }
-  }, [replaceFrom, replaceTo, image?.publicId, type]);
 
   const onSelectFieldHandler = (value: string, onChangeField: (value: string) => void) => {
     const imageSize = aspectRatioOptions[value as AspectRatioKey];
@@ -112,7 +105,8 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
 
   const onTransformHandler = async () => {
     setIsTransforming(true);
-    setTransformationConfig(deepMergeObjects(newTransformation, transformationConfig));
+    // Use the new transformation directly to avoid stale config corruption
+    setTransformationConfig(newTransformation);
     setNewTransformation(null);
     startTransition(async () => {
       await updateCredits(userId, creditFee);
@@ -264,32 +258,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
                 </FormItem>
               )} />
             )}
-          </div>
-        )}
-
-        {/* Generative Replace Fields */}
-        {type === "replace" && (
-          <div className="prompt-field">
-            <div className="w-full space-y-2">
-              <label className="text-dark-600 font-semibold text-sm">Object to Replace (From)</label>
-              <Input
-                className="input-field"
-                placeholder="e.g. car, dog, chair, sky..."
-                value={replaceFrom}
-                onChange={(e) => setReplaceFrom(e.target.value)}
-              />
-              <p className="text-xs text-dark-400">What object do you want to replace?</p>
-            </div>
-            <div className="w-full space-y-2">
-              <label className="text-dark-600 font-semibold text-sm">Replace With (To)</label>
-              <Input
-                className="input-field"
-                placeholder="e.g. bicycle, cat, sofa, ocean..."
-                value={replaceTo}
-                onChange={(e) => setReplaceTo(e.target.value)}
-              />
-              <p className="text-xs text-dark-400">What should replace it?</p>
-            </div>
           </div>
         )}
 

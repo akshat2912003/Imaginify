@@ -1,13 +1,24 @@
 import { Collection } from "@/components/shared/Collection";
-import { getAllImages } from "@/lib/actions/image.actions";
+import { getUserImages } from "@/lib/actions/image.actions";
+import { getUserById } from "@/lib/actions/user.actions";
 import { navLinks } from "@/constants";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 const Home = async ({ searchParams }: { searchParams: { page?: string; query?: string } }) => {
+  const { userId } = auth();
+  if (!userId) redirect("/sign-in");
+
   const page = Number(searchParams?.page) || 1;
   const searchQuery = (searchParams?.query as string) || "";
 
-  const images = await getAllImages({ page, searchQuery });
+  // Get the current user's MongoDB _id
+  const currentUser = await getUserById(userId);
+  if (!currentUser) redirect("/sign-in");
+
+  // Fetch only this user's images
+  const images = await getUserImages({ page, userId: currentUser._id });
 
   const aiTools = [
     { label: "Image Restore", route: "/transformations/add/restore", icon: "🖼️", desc: "Restore damaged images" },
@@ -52,7 +63,7 @@ const Home = async ({ searchParams }: { searchParams: { page?: string; query?: s
         <Collection
           hasSearch={true}
           images={images?.data}
-          totalPages={images?.totalPage}
+          totalPages={images?.totalPages}
           page={page}
         />
       </section>

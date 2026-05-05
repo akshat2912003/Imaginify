@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 const Sidebar = () => {
   const pathname = usePathname();
 
-  const mainTools = navLinks.slice(0, 10);
-  const bottomLinks = navLinks.slice(10);
+  const mainTools = navLinks.slice(0, 7);
+  const bottomLinks = navLinks.slice(7);
 
   return (
     <aside className="sidebar">
@@ -26,7 +26,6 @@ const Sidebar = () => {
             <ul className="sidebar-nav_elements">
               {mainTools.map((link) => {
                 const isActive = link.route === pathname;
-                const isGemini = link.route.startsWith("/ai/");
                 return (
                   <li
                     key={link.route}
@@ -40,11 +39,6 @@ const Sidebar = () => {
                       <span className={cn("p-16-semibold", isActive ? "text-white" : "text-dark-700")}>
                         {link.label}
                       </span>
-                      {isGemini && (
-                        <span className="ml-auto text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">
-                          AI
-                        </span>
-                      )}
                     </Link>
                   </li>
                 );
