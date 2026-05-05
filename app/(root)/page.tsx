@@ -12,7 +12,7 @@ const Home = async ({ searchParams }: { searchParams: { page?: string; query?: s
   const page = Number(searchParams?.page) || 1;
   const searchQuery = (searchParams?.query as string) || "";
 
-  let images = { data: [], totalPages: 1 } as { data: any[]; totalPages: number };
+  let images: { data: any[]; totalPages: number } = { data: [], totalPages: 1 };
   
   if (userId) {
     // Get the current user's MongoDB _id
@@ -21,7 +21,9 @@ const Home = async ({ searchParams }: { searchParams: { page?: string; query?: s
     if (currentUser) {
       // Fetch only this user's images
       const res = await getUserImages({ page, userId: currentUser._id });
-      if (res) images = res;
+      if (res && res.data) {
+        images = res;
+      }
     }
   }
 
