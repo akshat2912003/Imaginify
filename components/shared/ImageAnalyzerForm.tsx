@@ -49,10 +49,8 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
     setAnalysis(null);
 
     try {
-      // Deduct credit
       await updateCredits(userId, creditFee);
 
-      // Convert to base64
       const base64 = selectedImage.split(",")[1];
       const mimeType = selectedFile.type || "image/jpeg";
 
@@ -85,7 +83,6 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Format the analysis text with markdown-like styling
   const formatAnalysis = (text: string) => {
     return text.split("\n").map((line, i) => {
       if (line.startsWith("##") || line.match(/^\d\./)) {
@@ -116,7 +113,9 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
 
       {/* Upload Area */}
       <div className="space-y-3">
-        <label className="text-dark-600 font-semibold text-base">Upload Image to Analyze</label>
+        <label className="text-dark-600 font-semibold text-base">
+          Upload Image to Analyze
+        </label>
 
         {!selectedImage ? (
           <div
@@ -131,7 +130,12 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
         ) : (
           <div className="space-y-4">
             <div className="relative rounded-[16px] overflow-hidden border-2 border-purple-200/20 shadow-lg">
-              <img src={selectedImage} alt="Selected" className="w-full max-h-96 object-contain bg-gray-50" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedImage}
+                alt="Selected for analysis"
+                className="w-full max-h-96 object-contain bg-gray-50"
+              />
               <button
                 onClick={handleReset}
                 className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors font-bold"
@@ -140,7 +144,7 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
               </button>
             </div>
             <p className="text-sm text-dark-400 text-center">
-              📁 {selectedFile?.name} ({(selectedFile?.size! / 1024 / 1024).toFixed(2)} MB)
+              📁 {selectedFile?.name} ({((selectedFile?.size ?? 0) / 1024 / 1024).toFixed(2)} MB)
             </p>
           </div>
         )}
@@ -192,7 +196,6 @@ const ImageAnalyzerForm = ({ userId, creditBalance }: Props) => {
             {formatAnalysis(analysis)}
           </div>
 
-          {/* Analyze another */}
           <Button
             onClick={handleReset}
             variant="outline"

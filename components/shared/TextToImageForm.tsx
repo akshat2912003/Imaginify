@@ -31,7 +31,11 @@ const TextToImageForm = ({ userId, creditBalance }: Props) => {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      toast({ title: "Please enter a prompt", description: "Describe what image you want to generate", className: "error-toast" });
+      toast({
+        title: "Please enter a prompt",
+        description: "Describe what image you want to generate",
+        className: "error-toast",
+      });
       return;
     }
 
@@ -40,7 +44,6 @@ const TextToImageForm = ({ userId, creditBalance }: Props) => {
     setImageDescription(null);
 
     try {
-      // Deduct credit
       await updateCredits(userId, creditFee);
 
       const response = await fetch("/api/gemini", {
@@ -50,20 +53,31 @@ const TextToImageForm = ({ userId, creditBalance }: Props) => {
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.error || "Failed to generate image");
 
       if (data.type === "image") {
         setResponseType("image");
         setGeneratedImage(`data:${data.mimeType};base64,${data.imageBase64}`);
-        toast({ title: "Image Generated! ✨", description: "Your AI image is ready!", className: "success-toast" });
+        toast({
+          title: "Image Generated! ✨",
+          description: "Your AI image is ready!",
+          className: "success-toast",
+        });
       } else if (data.type === "description") {
         setResponseType("description");
         setImageDescription(data.description);
-        toast({ title: "Description Ready!", description: "Gemini described your image concept", className: "success-toast" });
+        toast({
+          title: "Description Ready!",
+          description: "Gemini described your image concept",
+          className: "success-toast",
+        });
       }
     } catch (error: any) {
-      toast({ title: "Generation Failed", description: error.message || "Please try again", className: "error-toast" });
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Please try again",
+        className: "error-toast",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -147,6 +161,7 @@ const TextToImageForm = ({ userId, creditBalance }: Props) => {
             </button>
           </div>
           <div className="rounded-[16px] overflow-hidden border-2 border-purple-200/20 shadow-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={generatedImage}
               alt="AI Generated"
@@ -154,27 +169,29 @@ const TextToImageForm = ({ userId, creditBalance }: Props) => {
             />
           </div>
           <p className="text-sm text-dark-400 text-center">
-            Prompt: <span className="text-purple-500 italic">"{prompt}"</span>
+            Prompt: <span className="text-purple-500 italic">&ldquo;{prompt}&rdquo;</span>
           </p>
         </div>
       )}
 
-      {/* Description Result (fallback when Imagen not available) */}
+      {/* Description Result (fallback) */}
       {responseType === "description" && imageDescription && (
         <div className="space-y-4">
           <h3 className="h3-bold text-dark-600">🤖 AI Image Concept</h3>
           <div className="rounded-[16px] border-2 border-purple-200/20 bg-purple-50 p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">🎨</span>
-              <p className="font-semibold text-purple-600">Your prompt: "{prompt}"</p>
+              <p className="font-semibold text-purple-600">
+                Your prompt: &ldquo;{prompt}&rdquo;
+              </p>
             </div>
             <div className="prose text-dark-600 whitespace-pre-line leading-relaxed">
               {imageDescription}
             </div>
             <div className="mt-4 p-3 bg-purple-100 rounded-lg">
               <p className="text-sm text-purple-700">
-                💡 <strong>Note:</strong> Full image generation requires Google Imagen API access (currently in limited preview). 
-                Above is Gemini's detailed description of what your image would look like.
+                💡 <strong>Note:</strong> Full image generation requires Google Imagen API access.
+                Above is Gemini&apos;s detailed description of what your image would look like.
               </p>
             </div>
           </div>
