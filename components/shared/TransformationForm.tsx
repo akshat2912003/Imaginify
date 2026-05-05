@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { aspectRatioOptions, creditFee, defaultValues, transformationTypes } from "@/constants";
+import { aspectRatioOptions, creditFee, defaultValues, transformationTypes, smartCropAspectRatios } from "@/constants";
 import { addImage, updateImage } from "@/lib/actions/image.actions";
 import { updateCredits } from "@/lib/actions/user.actions";
 import { AspectRatioKey, deepMergeObjects } from "@/lib/utils";
@@ -28,8 +28,8 @@ export const formSchema = z.object({
   publicId: z.string(),
 });
 
-// These types have NO extra input fields — button should enable as soon as image is uploaded
-const NO_FIELD_TYPES = ["restore", "removeBackground"];
+// Types that need NO extra fields — button enables as soon as image is uploaded
+const NO_FIELD_TYPES = ["restore", "removeBackground", "smartcrop"];
 
 const TransformationForm = ({ action, data = null, userId, type, creditBalance, config = null }: TransformationFormProps) => {
   const transformationType = transformationTypes[type];
@@ -38,6 +38,9 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransforming, setIsTransforming] = useState(false);
   const [transformationConfig, setTransformationConfig] = useState(config);
+  const [replaceFrom, setReplaceFrom] = useState("");
+  const [replaceTo, setReplaceTo] = useState("");
+  const [smartCropRatio, setSmartCropRatio] = useState("1:1");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
@@ -51,19 +54,35 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     defaultValues: initialValues,
   });
 
-  // ✅ KEY FIX: For restore & removeBackground, auto-enable button when image is uploaded
+  // ✅ Auto-enable button for no-field types when image uploads
   useEffect(() => {
     if (image?.publicId && NO_FIELD_TYPES.includes(type)) {
-      setNewTransformation(transformationType.config);
+      if (type === "smartcrop") {
+        const ratio = smartCropAspectRatios[smartCropRatio as keyof typeof smartCropAspectRatios];
+        setNewTransformation({
+          smartCrop: true,
+        });
+      } else {
+        setNewTransformation(transformationType.config);
+      }
     }
-  }, [image?.publicId, type]);
+  }, [image?.publicId, type, smartCropRatio]);
 
-  // ✅ For Update action, pre-set the transformation config
+  // ✅ For update action pre-set config
   useEffect(() => {
     if (data && action === "Update") {
       setNewTransformation(transformationType.config);
     }
   }, []);
+
+  // ✅ For replace type — enable button when both fields are filled
+  useEffect(() => {
+    if (type === "replace" && image?.publicId && replaceFrom && replaceTo) {
+      setNewTransformation({
+        replace: { from: replaceFrom, to: replaceTo },
+      });
+    }
+  }, [replaceFrom, replaceTo, image?.publicId, type]);
 
   const onSelectFieldHandler = (value: string, onChangeField: (value: string) => void) => {
     const imageSize = aspectRatioOptions[value as AspectRatioKey];
@@ -103,7 +122,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
   const onSubmitHandler = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     if (data || image) {
-      const transformationUrl = getCldImageUrl({ publicId: image?.publicId || "", ...transformationConfig });
+      const transformationUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${image?.publicId}`;
       const imageData = {
         title: values.title,
         publicId: image?.publicId || "",
@@ -147,7 +166,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     setIsSubmitting(false);
   };
 
-  // ✅ FIXED: Button disabled only if no image OR no transformation set
   const isApplyDisabled = isTransforming || !image?.publicId || newTransformation === null;
 
   return (
@@ -166,7 +184,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           </FormItem>
         )} />
 
-        {/* Generative Fill — Aspect Ratio Selector */}
+        {/* Generative Fill — Aspect Ratio */}
         {type === "fill" && (
           <FormField control={form.control} name="aspectRatio" render={({ field }) => (
             <FormItem className="w-full">
@@ -190,7 +208,27 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           )} />
         )}
 
-        {/* Object Remove / Object Recolor — Prompt fields */}
+        {/* Smart Crop — Crop Ratio */}
+        {type === "smartcrop" && (
+          <div className="w-full space-y-2">
+            <label className="text-dark-600 font-semibold text-sm">Crop Aspect Ratio</label>
+            <Select onValueChange={(val) => setSmartCropRatio(val)} value={smartCropRatio}>
+              <SelectTrigger className="select-field">
+                <SelectValue placeholder="Select crop ratio" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(smartCropAspectRatios).map(([key, val]) => (
+                  <SelectItem key={key} value={key} className="select-item">
+                    {val.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-dark-400">AI will automatically focus on the most important subject</p>
+          </div>
+        )}
+
+        {/* Object Remove / Recolor */}
         {(type === "remove" || type === "recolor") && (
           <div className="prompt-field">
             <FormField control={form.control} name="prompt" render={({ field }) => (
@@ -226,6 +264,32 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
                 </FormItem>
               )} />
             )}
+          </div>
+        )}
+
+        {/* Generative Replace Fields */}
+        {type === "replace" && (
+          <div className="prompt-field">
+            <div className="w-full space-y-2">
+              <label className="text-dark-600 font-semibold text-sm">Object to Replace (From)</label>
+              <Input
+                className="input-field"
+                placeholder="e.g. car, dog, chair, sky..."
+                value={replaceFrom}
+                onChange={(e) => setReplaceFrom(e.target.value)}
+              />
+              <p className="text-xs text-dark-400">What object do you want to replace?</p>
+            </div>
+            <div className="w-full space-y-2">
+              <label className="text-dark-600 font-semibold text-sm">Replace With (To)</label>
+              <Input
+                className="input-field"
+                placeholder="e.g. bicycle, cat, sofa, ocean..."
+                value={replaceTo}
+                onChange={(e) => setReplaceTo(e.target.value)}
+              />
+              <p className="text-xs text-dark-400">What should replace it?</p>
+            </div>
           </div>
         )}
 
@@ -290,14 +354,9 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
             )}
           </Button>
         </div>
-
       </form>
     </Form>
   );
 };
 
 export default TransformationForm;
-
-function getCldImageUrl(options: any) {
-  return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${options.publicId}`;
-}

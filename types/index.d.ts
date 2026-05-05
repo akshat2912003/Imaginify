@@ -59,6 +59,8 @@ declare type Transformations = {
   remove?: { prompt: string; removeShadow?: boolean; multiple?: boolean };
   recolor?: { prompt?: string; to: string; multiple?: boolean };
   removeBackground?: boolean;
+  replace?: { from: string; to: string };
+  smartCrop?: boolean;
 };
 
 declare type CheckoutTransactionParams = {
@@ -82,7 +84,9 @@ declare type TransformationTypeKey =
   | "fill"
   | "remove"
   | "recolor"
-  | "removeBackground";
+  | "removeBackground"
+  | "replace"
+  | "smartcrop";
 
 declare type FormUrlQueryParams = {
   searchParams: string;

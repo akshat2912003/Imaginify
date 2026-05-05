@@ -5,6 +5,10 @@ export const navLinks = [
   { label: "Object Remove", route: "/transformations/add/remove", icon: "🗑️" },
   { label: "Object Recolor", route: "/transformations/add/recolor", icon: "🎨" },
   { label: "Background Remove", route: "/transformations/add/removeBackground", icon: "📷" },
+  { label: "Generative Replace", route: "/transformations/add/replace", icon: "🔄" },
+  { label: "Smart Crop", route: "/transformations/add/smartcrop", icon: "✂️" },
+  { label: "Text to Image", route: "/ai/text-to-image", icon: "🎨" },
+  { label: "Image Analyzer", route: "/ai/image-analyzer", icon: "🔍" },
   { label: "Profile", route: "/profile", icon: "👤" },
   { label: "Buy Credits", route: "/credits", icon: "💳" },
 ];
@@ -88,12 +92,36 @@ export const transformationTypes = {
     config: { recolor: { prompt: "", to: "", multiple: true } },
     icon: "🎨",
   },
-};
+  replace: {
+  type: "replace",
+  title: "Generative Replace",
+  subTitle: "Replace any object in your image with AI-generated content",
+  config: { replace: { from: "", to: "" } },
+  icon: "🔄",
+  },
+  smartcrop: {
+    type: "smartcrop",
+    title: "Smart Crop",
+    subTitle: "AI automatically crops and focuses on the most important subject",
+    config: { smartCrop: true },
+    icon: "✂️",
+  },
+};  
 
 export const aspectRatioOptions = {
   "1:1": { aspectRatio: "1:1", label: "Square (1:1)", width: 1000, height: 1000 },
   "3:4": { aspectRatio: "3:4", label: "Standard Portrait (3:4)", width: 1000, height: 1334 },
   "9:16": { aspectRatio: "9:16", label: "Phone Portrait (9:16)", width: 1000, height: 1778 },
+  "16:9": { aspectRatio: "16:9", label: "Landscape (16:9)", width: 1778, height: 1000 },
+  "4:3": { aspectRatio: "4:3", label: "Standard Landscape (4:3)", width: 1334, height: 1000 },
+};
+
+export const smartCropAspectRatios = {
+  "1:1": { label: "Square (1:1)", width: 800, height: 800 },
+  "16:9": { label: "Landscape (16:9)", width: 1280, height: 720 },
+  "4:3": { label: "Standard (4:3)", width: 1024, height: 768 },
+  "9:16": { label: "Portrait (9:16)", width: 720, height: 1280 },
+  "3:4": { label: "Portrait (3:4)", width: 768, height: 1024 },
 };
 
 export const defaultValues = {
