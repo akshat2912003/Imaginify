@@ -63,7 +63,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
           gravity: "auto",
           width: ratio.width,
           height: ratio.height,
-        });
+        } as any);
       } else {
         setNewTransformation(transformationType.config);
       }

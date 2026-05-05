@@ -8,17 +8,21 @@ import { redirect } from "next/navigation";
 
 const Home = async ({ searchParams }: { searchParams: { page?: string; query?: string } }) => {
   const { userId } = auth();
-  if (!userId) redirect("/sign-in");
-
+  
   const page = Number(searchParams?.page) || 1;
   const searchQuery = (searchParams?.query as string) || "";
 
-  // Get the current user's MongoDB _id
-  const currentUser = await getUserById(userId);
-  if (!currentUser) redirect("/sign-in");
-
-  // Fetch only this user's images
-  const images = await getUserImages({ page, userId: currentUser._id });
+  let images = { data: [], totalPages: 1 };
+  
+  if (userId) {
+    // Get the current user's MongoDB _id
+    const currentUser = await getUserById(userId);
+    
+    if (currentUser) {
+      // Fetch only this user's images
+      images = await getUserImages({ page, userId: currentUser._id });
+    }
+  }
 
   const aiTools = [
     { label: "Image Restore", route: "/transformations/add/restore", icon: "🖼️", desc: "Restore damaged images" },

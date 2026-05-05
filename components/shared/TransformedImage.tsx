@@ -19,11 +19,12 @@ const TransformedImage = ({
   };
 
   // For smartcrop, use the dimensions from transformationConfig (the selected ratio)
-  const displayWidth = (type === "smartcrop" && transformationConfig?.width)
-    ? transformationConfig.width
+  const config = transformationConfig as any;
+  const displayWidth = (type === "smartcrop" && config?.width)
+    ? config.width
     : getImageSize(type, image, "width");
-  const displayHeight = (type === "smartcrop" && transformationConfig?.height)
-    ? transformationConfig.height
+  const displayHeight = (type === "smartcrop" && config?.height)
+    ? config.height
     : getImageSize(type, image, "height");
 
   return (

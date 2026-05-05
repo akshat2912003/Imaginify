@@ -96,7 +96,14 @@ export const transformationTypes = {
     config: { smartCrop: true },
     icon: "✂️",
   },
-};  
+  replace: {
+    type: "replace",
+    title: "Object Replace",
+    subTitle: "Replace objects with something else using AI",
+    config: { replace: { from: "", to: "" } },
+    icon: "🔄",
+  },
+};
 
 export const aspectRatioOptions = {
   "1:1": { aspectRatio: "1:1", label: "Square (1:1)", width: 1000, height: 1000 },
