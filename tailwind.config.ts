@@ -45,7 +45,7 @@ module.exports = {
       fontFamily: { IBMPlex: ["var(--font-ibm-plex)"] },
       backgroundImage: {
         "purple-gradient": "linear-gradient(to right, #7857FF, #4318FF)",
-        banner: "linear-gradient(135deg, #7857FF 0%, #4318FF 50%, #868CFF 100%)",
+        banner: "url('/assets/images/banner-bg.png')",
       },
       borderRadius: {
         lg: "var(--radius)",

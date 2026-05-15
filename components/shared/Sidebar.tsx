@@ -1,93 +1,90 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+
 import { navLinks } from "@/constants";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 const Sidebar = () => {
   const pathname = usePathname();
 
-  const mainTools = navLinks.slice(0, 7);
-  const bottomLinks = navLinks.slice(7);
-
   return (
     <aside className="sidebar">
       <div className="flex size-full flex-col gap-4">
-        {/* Logo */}
         <Link href="/" className="sidebar-logo">
-          <span className="text-2xl">✦</span>
-          <h1 className="h2-bold text-dark-600 font-bold tracking-tight">IMAGINIFY</h1>
+          <Image src="/assets/images/logo-text.svg" alt="logo" width={180} height={28} />
         </Link>
 
         <nav className="sidebar-nav">
           <SignedIn>
             <ul className="sidebar-nav_elements">
-              {mainTools.map((link) => {
+              {navLinks.slice(0, 6).map((link) => {
                 const isActive = link.route === pathname;
+
                 return (
                   <li
                     key={link.route}
                     className={cn(
                       "sidebar-nav_element group",
-                      isActive && "bg-purple-gradient text-white shadow-inner"
+                      isActive ? "bg-purple-gradient text-white" : "text-dark-700"
                     )}
                   >
-                    <Link href={link.route} className="sidebar-link">
-                      <span className="text-xl">{link.icon}</span>
-                      <span className={cn("p-16-semibold", isActive ? "text-white" : "text-dark-700")}>
-                        {link.label}
-                      </span>
+                    <Link className="sidebar-link" href={link.route}>
+                      <Image
+                        src={link.icon}
+                        alt="logo"
+                        width={24}
+                        height={24}
+                        className={cn({ "brightness-200": isActive })}
+                      />
+                      {link.label}
                     </Link>
                   </li>
                 );
               })}
             </ul>
-          </SignedIn>
 
-          <SignedOut>
             <ul className="sidebar-nav_elements">
-              <li className={cn("sidebar-nav_element", pathname === "/" && "bg-purple-gradient text-white")}>
-                <Link href="/" className="sidebar-link">
-                  <span className="text-xl">🏠</span>
-                  <span className="p-16-semibold text-dark-700">Home</span>
-                </Link>
-              </li>
-              <li className="mt-4">
-                <Link href="/sign-in" className="button bg-purple-gradient w-full text-white text-center block px-6 py-3 rounded-full">
-                  Login
-                </Link>
-              </li>
-            </ul>
-          </SignedOut>
-
-          <SignedIn>
-            <ul className="sidebar-nav_elements">
-              {bottomLinks.map((link) => {
+              {navLinks.slice(6).map((link) => {
                 const isActive = link.route === pathname;
+
                 return (
                   <li
                     key={link.route}
                     className={cn(
                       "sidebar-nav_element group",
-                      isActive && "bg-purple-gradient text-white shadow-inner"
+                      isActive ? "bg-purple-gradient text-white" : "text-dark-700"
                     )}
                   >
-                    <Link href={link.route} className="sidebar-link">
-                      <span className="text-xl">{link.icon}</span>
-                      <span className={cn("p-16-semibold", isActive ? "text-white" : "text-dark-700")}>
-                        {link.label}
-                      </span>
+                    <Link className="sidebar-link" href={link.route}>
+                      <Image
+                        src={link.icon}
+                        alt="logo"
+                        width={24}
+                        height={24}
+                        className={cn({ "brightness-200": isActive })}
+                      />
+                      {link.label}
                     </Link>
                   </li>
                 );
               })}
+
               <li className="flex-center cursor-pointer gap-2 p-4">
                 <UserButton afterSignOutUrl="/" showName />
               </li>
             </ul>
           </SignedIn>
+
+          <SignedOut>
+            <Button asChild className="button bg-purple-gradient bg-cover">
+              <Link href="/sign-in">Login</Link>
+            </Button>
+          </SignedOut>
         </nav>
       </div>
     </aside>

@@ -52,7 +52,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     defaultValues: initialValues,
   });
 
-  // ✅ Auto-enable button for no-field types when image uploads
   useEffect(() => {
     if (image?.publicId && NO_FIELD_TYPES.includes(type)) {
       if (type === "smartcrop") {
@@ -70,7 +69,6 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
     }
   }, [image?.publicId, type, smartCropRatio]);
 
-  // ✅ For update action pre-set config
   useEffect(() => {
     if (data && action === "Update") {
       setNewTransformation(transformationType.config);
@@ -308,8 +306,7 @@ const TransformationForm = ({ action, data = null, userId, type, creditBalance, 
 
           <Button
             type="submit"
-            className="submit-button capitalize"
-            style={{ background: "#2B3674" }}
+            className="submit-button capitalize bg-dark-600"
             disabled={isSubmitting || isTransforming}
           >
             {isSubmitting ? (

@@ -1,11 +1,12 @@
 "use client";
 
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { navLinks } from "@/constants";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { navLinks } from "@/constants";
-import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 const MobileNav = () => {
   const pathname = usePathname();
@@ -13,32 +14,58 @@ const MobileNav = () => {
   return (
     <header className="header">
       <Link href="/" className="flex items-center gap-2 md:py-2">
-        <span className="text-xl">✦</span>
-        <h1 className="font-bold text-dark-600 text-lg tracking-tight">IMAGINIFY</h1>
+        <Image
+          src="/assets/images/logo-text.svg"
+          alt="logo"
+          width={180}
+          height={28}
+        />
       </Link>
 
       <nav className="flex gap-2">
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
+
           <Sheet>
-            <SheetTrigger asChild>
-              <button className="p-2 rounded-lg hover:bg-purple-100 transition-colors">
-                <span className="text-2xl">☰</span>
-              </button>
+            <SheetTrigger>
+              <Image
+                src="/assets/icons/menu.svg"
+                alt="menu"
+                width={32}
+                height={32}
+                className="cursor-pointer"
+              />
             </SheetTrigger>
             <SheetContent className="sheet-content sm:w-64">
               <>
-                <Link href="/" className="flex items-center gap-2 mb-4">
-                  <span className="text-xl">✦</span>
-                  <h1 className="font-bold text-dark-600 text-lg">IMAGINIFY</h1>
-                </Link>
+                <Image
+                  src="/assets/images/logo-text.svg"
+                  alt="logo"
+                  width={152}
+                  height={23}
+                />
+
                 <ul className="header-nav_elements">
                   {navLinks.map((link) => {
                     const isActive = link.route === pathname;
+
                     return (
-                      <li key={link.route} className={cn("p-18-semibold flex whitespace-nowrap text-dark-700", isActive && "gradient-text")}>
-                        <Link href={link.route} className="flex gap-4 p-4 w-full">
-                          <span className="text-xl">{link.icon}</span>
+                      <li
+                        className={`${
+                          isActive && "gradient-text"
+                        } p-18 flex whitespace-nowrap text-dark-700`}
+                        key={link.route}
+                      >
+                        <Link
+                          className="sidebar-link cursor-pointer"
+                          href={link.route}
+                        >
+                          <Image
+                            src={link.icon}
+                            alt="logo"
+                            width={24}
+                            height={24}
+                          />
                           {link.label}
                         </Link>
                       </li>
@@ -49,8 +76,11 @@ const MobileNav = () => {
             </SheetContent>
           </Sheet>
         </SignedIn>
+
         <SignedOut>
-          <Link href="/sign-in" className="button bg-purple-gradient text-white text-sm px-4 py-2">Login</Link>
+          <Button asChild className="button bg-purple-gradient bg-cover">
+            <Link href="/sign-in">Login</Link>
+          </Button>
         </SignedOut>
       </nav>
     </header>
