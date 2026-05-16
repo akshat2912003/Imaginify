@@ -27,6 +27,13 @@ export async function createRazorpayOrder(amount: number, plan: string, credits:
 export async function createTransaction(transaction: CreateTransactionParams) {
   try {
     await connectToDatabase();
+
+    // Check if transaction already exists (e.g. processed by webhook)
+    const existingTransaction = await Transaction.findOne({ razorpayId: transaction.razorpayId });
+    if (existingTransaction) {
+      return JSON.parse(JSON.stringify(existingTransaction));
+    }
+
     const newTransaction = await Transaction.create({ ...transaction, buyer: transaction.buyerId });
     await updateCredits(transaction.buyerId, transaction.credits);
     return JSON.parse(JSON.stringify(newTransaction));

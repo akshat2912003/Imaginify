@@ -20,14 +20,24 @@ export async function POST(request: Request) {
 
   if (event.event === "payment.captured") {
     const payment = event.payload.payment.entity;
+
+    const credits = Number(payment.notes?.credits);
+    const buyerId = payment.notes?.buyerId;
+
+    if (!credits || !buyerId) {
+      console.error("Webhook Error: Missing credits or buyerId in payment notes", payment.notes);
+      return NextResponse.json({ message: "Missing data" }, { status: 400 });
+    }
+
     const transaction = {
       razorpayId: payment.id,
       amount: payment.amount / 100,
       plan: payment.notes?.plan || "",
-      credits: Number(payment.notes?.credits) || 0,
-      buyerId: payment.notes?.buyerId || "",
+      credits: credits,
+      buyerId: buyerId,
       createdAt: new Date(),
     };
+
     await createTransaction(transaction);
     return NextResponse.json({ message: "OK" });
   }

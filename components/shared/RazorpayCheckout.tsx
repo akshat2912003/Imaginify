@@ -43,6 +43,11 @@ const RazorpayCheckout = ({ plan, amount, credits, buyerId, userEmail, userName 
         name: "Imaginify",
         description: `${plan} - ${credits} Credits`,
         order_id: order.id,
+        notes: {
+          plan,
+          credits: credits.toString(),
+          buyerId,
+        },
         prefill: { name: userName || "", email: userEmail || "" },
         theme: { color: "#7857FF" },
         handler: async (response: any) => {

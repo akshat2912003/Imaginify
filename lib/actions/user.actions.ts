@@ -83,6 +83,7 @@ export async function updateCredits(userId: string, creditFee: number) {
       { new: true }
     );
     if (!updatedUserCredits) throw new Error("User credits update failed");
+    revalidatePath("/");
     return JSON.parse(JSON.stringify(updatedUserCredits));
   } catch (error) { handleError(error); }
 }
