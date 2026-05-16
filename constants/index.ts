@@ -29,7 +29,7 @@ export const plans = [
     _id: 2,
     name: "Pro Package",
     icon: "⚡",
-    price: 1999,
+    price: 259,
     credits: 120,
     inclusions: [
       { label: "120 Credits", isIncluded: true },
@@ -42,7 +42,7 @@ export const plans = [
     _id: 3,
     name: "Premium Package",
     icon: "⚡",
-    price: 9999,
+    price: 549,
     credits: 2000,
     inclusions: [
       { label: "2000 Credits", isIncluded: true },
